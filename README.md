@@ -18,6 +18,7 @@ secret is stored in this repository.
 | `R2_BUCKET` | bucket name, e.g. `mb-subtitles` |
 | `R2_PUBLIC_BASE` | the bucket's public URL, e.g. `https://pub-xxxx.r2.dev` (no trailing slash) |
 | `CALLBACK_SECRET` | the same value as VidoLeads' `CRON_SECRET` |
+| `S3_ENDPOINT` | optional — another S3-compatible store instead of R2, e.g. Backblaze B2 `https://s3.eu-central-003.backblazeb2.com` (then `R2_ACCOUNT_ID` is not needed and `R2_PUBLIC_BASE` is the bucket's public URL, e.g. `https://f003.backblazeb2.com/file/mb-subtitles`) |
 
 ## Files
 

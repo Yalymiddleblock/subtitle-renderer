@@ -84,7 +84,9 @@ async function uploadToR2(file, key, contentType) {
     log("dry run — not uploading", key, `${(size / 1024 / 1024).toFixed(1)} MB`);
     return { url: `dry-run://${key}`, bytes: size };
   }
-  const endpoint = `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  // Cloudflare R2 by default; any S3-compatible store (Backblaze B2, …)
+  // through S3_ENDPOINT.
+  const endpoint = process.env.S3_ENDPOINT || `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
   const bucket = process.env.R2_BUCKET;
   await run("aws", ["s3", "cp", file, `s3://${bucket}/${key}`, "--endpoint-url", endpoint, "--content-type", contentType, "--no-progress"], { quiet: true });
   const { size } = await stat(file);
@@ -266,7 +268,8 @@ async function taskBurn(input) {
 async function main() {
   if (!job.id || !job.task || !job.videoUrl || !job.prefix) throw new Error("Job is missing id, task, videoUrl or prefix");
   if (!process.env.DRY_RUN) {
-    for (const name of ["R2_ACCOUNT_ID", "R2_BUCKET", "R2_PUBLIC_BASE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]) {
+    const required = ["R2_BUCKET", "R2_PUBLIC_BASE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", ...(process.env.S3_ENDPOINT ? [] : ["R2_ACCOUNT_ID"])];
+    for (const name of required) {
       if (!process.env[name]) {
         throw new Error(`Repository secret ${name.replace("AWS_ACCESS_KEY_ID", "R2_ACCESS_KEY_ID").replace("AWS_SECRET_ACCESS_KEY", "R2_SECRET_ACCESS_KEY")} is not set`);
       }

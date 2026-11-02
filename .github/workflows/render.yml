@@ -35,6 +35,7 @@ jobs:
         env:
           JOB_JSON: ${{ inputs.job }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           R2_PUBLIC_BASE: ${{ secrets.R2_PUBLIC_BASE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
