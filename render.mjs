@@ -268,11 +268,15 @@ async function taskBurn(input) {
 async function main() {
   if (!job.id || !job.task || !job.videoUrl || !job.prefix) throw new Error("Job is missing id, task, videoUrl or prefix");
   if (!process.env.DRY_RUN) {
-    const required = ["R2_BUCKET", "R2_PUBLIC_BASE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", ...(process.env.S3_ENDPOINT ? [] : ["R2_ACCOUNT_ID"])];
-    for (const name of required) {
-      if (!process.env[name]) {
-        throw new Error(`Repository secret ${name.replace("AWS_ACCESS_KEY_ID", "R2_ACCESS_KEY_ID").replace("AWS_SECRET_ACCESS_KEY", "R2_SECRET_ACCESS_KEY")} is not set`);
-      }
+    const required = ["R2_BUCKET", "R2_PUBLIC_BASE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "CALLBACK_SECRET", ...(process.env.S3_ENDPOINT ? [] : ["R2_ACCOUNT_ID"])];
+    const missing = required
+      .filter((name) => !process.env[name])
+      .map((name) => name.replace("AWS_ACCESS_KEY_ID", "R2_ACCESS_KEY_ID").replace("AWS_SECRET_ACCESS_KEY", "R2_SECRET_ACCESS_KEY"));
+    if (missing.length) {
+      // Not set up yet: say so and end quietly (a failed run would email the
+      // owner for every video). VidoLeads retries the job later on its own.
+      console.log(`::warning::Storage is not set up yet — missing repository secrets: ${missing.join(", ")}. Nothing was rendered.`);
+      return;
     }
   }
   await mkdir(WORK, { recursive: true });
