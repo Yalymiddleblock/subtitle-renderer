@@ -1,0 +1,44 @@
+name: Render
+
+# Started by VidoLeads (Studio → Subtitle feeds) through the GitHub API for
+# videos too big for Cloudinary. One run = one job: either the audio track
+# for transcription, or the burned-in subtitled videos, uploaded to R2.
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Job description (JSON) prepared by VidoLeads"
+        required: true
+        type: string
+
+concurrency:
+  group: render-${{ fromJSON(inputs.job).id }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fonts and tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-liberation fonts-dejavu-core fonts-roboto fonts-open-sans > /dev/null
+          mkdir -p fonts
+          curl -sSL --retry 3 -o fonts/Montserrat.ttf "https://github.com/google/fonts/raw/main/ofl/montserrat/Montserrat%5Bwght%5D.ttf" || true
+          fc-cache -f > /dev/null || true
+          ffmpeg -version | head -1
+
+      - name: Render
+        env:
+          JOB_JSON: ${{ inputs.job }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_BASE: ${{ secrets.R2_PUBLIC_BASE }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
+        run: node render.mjs
