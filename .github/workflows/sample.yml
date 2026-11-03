@@ -22,7 +22,7 @@ jobs:
         run: |
           mkdir -p results
           set -o pipefail
-          python3 -u job/fetch.py 2>&1 | tee results/log.txt
+          python3 -u job/transcribe_clip.py 2>&1 | tee results/log.txt
       - name: Commit results
         if: always()
         run: |
