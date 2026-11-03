@@ -32,8 +32,9 @@ def probe(path):
     return {"width": stream["width"], "height": stream["height"], "duration": float(data["format"]["duration"])}
 
 
-# 1. The vertical short, as published.
-open("results/short.mp4", "wb").write(get(job["short_url"]))
+# 1. The vertical short, as published (already fetched by the first run).
+if not os.path.exists("results/short.mp4"):
+    open("results/short.mp4", "wb").write(get(job["short_url"]))
 print("short", probe("results/short.mp4"), flush=True)
 
 # 2. The episodes: full-HD ones.
@@ -59,7 +60,7 @@ json.dump(episodes, open("results/episodes.json", "w"), indent=1)
 
 from faster_whisper import WhisperModel  # noqa: E402
 
-scan_model = WhisperModel("large-v3-turbo", device="cpu", compute_type="int8")
+scan_model = WhisperModel("small.en", device="cpu", compute_type="int8")
 
 
 def transcribe(model, path, offset=0.0):
@@ -126,7 +127,11 @@ run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-ss", f"{start:.2f}"
 print("clip", probe("results/episode_clip.mp4"), os.path.getsize("results/episode_clip.mp4"), flush=True)
 
 # The clip itself, transcribed again by the full model on its own timeline.
-full = WhisperModel("large-v3", device="cpu", compute_type="int8")
+try:
+    full = WhisperModel("large-v3", device="cpu", compute_type="int8")
+except Exception as error:  # noqa: BLE001
+    print("large-v3 unavailable:", error, flush=True)
+    full = WhisperModel("medium.en", device="cpu", compute_type="int8")
 run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", "results/episode_clip.mp4", "-vn", "-ac", "1", "-ar", "16000", "results/clip.wav"])
 clip_segments = transcribe(full, "results/clip.wav")
 os.remove("results/clip.wav")
