@@ -2,3 +2,5 @@ results/*.wav
 work/
 fonts/
 node_modules/
+job/__pycache__/
+results/*.wav

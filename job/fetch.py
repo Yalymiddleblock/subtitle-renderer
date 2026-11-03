@@ -58,6 +58,13 @@ full_hd = [ep for ep in episodes if ep["width"] >= 1280] or episodes
 print(len(episodes), "episodes,", len(full_hd), "full HD", flush=True)
 json.dump(episodes, open("results/episodes.json", "w"), indent=1)
 
+fallback = next((ep for ep in full_hd if "Golden Hot Dog" in ep["title"]), full_hd[0])
+run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-ss", "60", "-i", fallback["url"], "-t", "75",
+     "-map", "0:v:0", "-map", "0:a:0", "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p",
+     "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "results/fallback_clip.mp4"])
+json.dump({"episode": fallback, "clip_start": 60, "clip_duration": 75}, open("results/fallback_clip.json", "w"), indent=1)
+print("fallback clip", probe("results/fallback_clip.mp4"), os.path.getsize("results/fallback_clip.mp4"), flush=True)
+
 from faster_whisper import WhisperModel  # noqa: E402
 
 scan_model = WhisperModel("small.en", device="cpu", compute_type="int8")

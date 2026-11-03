@@ -19,7 +19,10 @@ jobs:
           sudo apt-get install -y -qq ffmpeg > /dev/null
           pip install -q faster-whisper==1.1.1
       - name: Fetch and transcribe
-        run: python3 job/fetch.py
+        run: |
+          mkdir -p results
+          set -o pipefail
+          python3 -u job/fetch.py 2>&1 | tee results/log.txt
       - name: Commit results
         if: always()
         run: |
